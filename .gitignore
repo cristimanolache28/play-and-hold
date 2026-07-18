@@ -1,0 +1,94 @@
+# ==================================================
+# IntelliJ IDEA
+# ==================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ==================================================
+# Java / Maven
+# ==================================================
+**/target/
+*.class
+*.war
+*.ear
+
+# Maven Wrapper trebuie păstrat
+!.mvn/wrapper/maven-wrapper.jar
+
+# ==================================================
+# Logs and runtime files
+# ==================================================
+*.log
+logs/
+*.pid
+hs_err_pid*
+replay_pid*
+
+# ==================================================
+# Environment variables and secrets
+# ==================================================
+.env
+.env.*
+!.env.example
+
+# Local Spring Boot configuration
+**/application-local.properties
+**/application-local.yml
+**/application-local.yaml
+
+**/application-secret.properties
+**/application-secret.yml
+**/application-secret.yaml
+
+**/application-secrets.properties
+**/application-secrets.yml
+**/application-secrets.yaml
+
+# ==================================================
+# Docker local data and volumes
+# ==================================================
+docker-data/
+docker/volumes/
+volumes/
+postgres-data/
+pgdata/
+mongodb-data/
+redis-data/
+
+# Docker Compose local overrides
+docker-compose.override.yml
+compose.override.yml
+
+# ==================================================
+# Frontend / Node.js
+# ==================================================
+**/node_modules/
+**/dist/
+**/.next/
+**/coverage/
+**/.cache/
+
+# ==================================================
+# Operating system files
+# ==================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ==================================================
+# Visual Studio Code
+# ==================================================
+.vscode/
+
+# ==================================================
+# Temporary files
+# ==================================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+~$*
