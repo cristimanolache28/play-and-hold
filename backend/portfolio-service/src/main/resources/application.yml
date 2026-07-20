@@ -2,5 +2,13 @@ spring:
   application:
     name: portfolio-service
 
+  profiles:
+    active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+
 server:
   port: 8082

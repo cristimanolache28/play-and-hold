@@ -1,0 +1,48 @@
+services:
+  user-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: playandhold_users
+      POSTGRES_USER: playandhold_user
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playandhold_user -d playandhold_users"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  portfolio-db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: playandhold_portfolio
+      POSTGRES_USER: playandhold_portfolio
+      POSTGRES_PASSWORD: ${PORTFOLIO_DB_PASSWORD}
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - portfolio-db-data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U playandhold_portfolio -d playandhold_portfolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+volumes:
+  user-db-data:
+  portfolio-db-data:
