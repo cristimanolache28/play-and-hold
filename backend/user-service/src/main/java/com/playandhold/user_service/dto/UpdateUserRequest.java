@@ -30,10 +30,6 @@ public record UpdateUserRequest (
         )
         String username,
 
-        @NotBlank(message = "Email is required")
-        @Email(message = "Email format is invalid")
-        @Size(max = 254)
-        String email,
 
         @NotNull(message = "Gender is required")
         Gender gender,
