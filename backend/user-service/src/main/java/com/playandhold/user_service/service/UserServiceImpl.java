@@ -4,10 +4,13 @@ import com.playandhold.user_service.dto.CreateUserRequest;
 import com.playandhold.user_service.dto.UserResponse;
 import com.playandhold.user_service.entity.User;
 import com.playandhold.user_service.exception.EmailAlreadyExistsException;
+import com.playandhold.user_service.exception.UserNotFoundException;
 import com.playandhold.user_service.exception.UsernameAlreadyExistsException;
 import com.playandhold.user_service.mapper.UserMapper;
 import com.playandhold.user_service.repository.UserRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService{
@@ -36,4 +39,14 @@ public class UserServiceImpl implements UserService{
         return userMapper.toDto(userSaved);
 
     }
+
+    @Override
+    public UserResponse getUserById(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(userId));
+
+        return userMapper.toDto(user);
+    }
+
+
 }
