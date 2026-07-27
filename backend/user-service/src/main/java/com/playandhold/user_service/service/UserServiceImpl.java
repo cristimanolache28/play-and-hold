@@ -4,6 +4,7 @@ import com.playandhold.user_service.dto.CreateUserRequest;
 import com.playandhold.user_service.dto.UserResponse;
 import com.playandhold.user_service.entity.User;
 import com.playandhold.user_service.exception.EmailAlreadyExistsException;
+import com.playandhold.user_service.exception.EmailNotFoundException;
 import com.playandhold.user_service.exception.UserNotFoundException;
 import com.playandhold.user_service.exception.UsernameAlreadyExistsException;
 import com.playandhold.user_service.mapper.UserMapper;
@@ -14,7 +15,6 @@ import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService{
-
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
@@ -25,11 +25,11 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserResponse createUser(CreateUserRequest request) {
-        if (userRepository.existsByUsernameIgnoreCase(request.username())) {
+        if (userRepository.existsByUsername(request.username())) {
             throw new UsernameAlreadyExistsException(request.username());
         }
 
-        if (userRepository.existsByEmailIgnoreCase(request.email())) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new EmailAlreadyExistsException(request.email());
         }
 
@@ -37,16 +37,20 @@ public class UserServiceImpl implements UserService{
         User userSaved = userRepository.save(user);
 
         return userMapper.toDto(userSaved);
-
     }
 
     @Override
     public UserResponse getUserById(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
-
         return userMapper.toDto(user);
     }
 
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailNotFoundException(email));
+        return userMapper.toDto(user);
+    }
 
 }
