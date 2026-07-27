@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.time.LocalDateTime;
 
@@ -39,6 +40,26 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         log.warn("The user can not be found -> {}", exception.getMessage());
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(status)
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(EmailNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailNotFoundException(
+            EmailNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("The email can not be found -> {}", exception.getMessage());
         HttpStatus status = HttpStatus.NOT_FOUND;
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 LocalDateTime.now(),
