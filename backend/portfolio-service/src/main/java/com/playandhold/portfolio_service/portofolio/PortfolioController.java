@@ -2,6 +2,7 @@ package com.playandhold.portfolio_service.portofolio;
 
 import com.playandhold.portfolio_service.portofolio.dto.CreatePortfolioRequest;
 import com.playandhold.portfolio_service.portofolio.dto.PortfolioResponse;
+import com.playandhold.portfolio_service.portofolio.dto.UpdatePortfolioRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,5 +39,21 @@ public class PortfolioController {
         return ResponseEntity.ok(
                 portfolioService.getPortfolio(userId, portfolioId)
         );
+    }
+
+    @PatchMapping("/{portfolioId}")
+    public ResponseEntity<PortfolioResponse> updatePortfolio(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID portfolioId,
+            @Valid @RequestBody UpdatePortfolioRequest request
+    ) {
+        PortfolioResponse response =
+                portfolioService.updatePortfolio(
+                        userId,
+                        portfolioId,
+                        request
+                );
+
+        return ResponseEntity.ok(response);
     }
 }

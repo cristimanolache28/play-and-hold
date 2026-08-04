@@ -2,6 +2,7 @@ package com.playandhold.portfolio_service.portofolio;
 
 import com.playandhold.portfolio_service.portofolio.dto.CreatePortfolioRequest;
 import com.playandhold.portfolio_service.portofolio.dto.PortfolioResponse;
+import com.playandhold.portfolio_service.portofolio.dto.UpdatePortfolioRequest;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,21 @@ public class PortfolioService {
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " + portfolioId));
 
         return portfolioMapper.toDto(portfolio);
+    }
+
+    public PortfolioResponse updatePortfolio(UUID userId, UUID portfolioId, UpdatePortfolioRequest request) {
+        Portfolio portfolio = portfolioRepository.findByUserIdAndPortfolioId(userId, portfolioId)
+                        .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " +portfolioId));
+
+        portfolioMapper.updatePortfolioDto(
+                portfolio,
+                request
+        );
+
+        Portfolio savedPortfolio =
+                portfolioRepository.save(portfolio);
+
+        return portfolioMapper.toDto(savedPortfolio);
     }
 
 }
