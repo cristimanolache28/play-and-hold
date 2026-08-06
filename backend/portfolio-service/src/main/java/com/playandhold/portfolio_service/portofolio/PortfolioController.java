@@ -15,7 +15,6 @@ import java.util.UUID;
 @RequestMapping("/api/v1/portfolios")
 @RequiredArgsConstructor
 public class PortfolioController {
-
     private final PortfolioService portfolioService;
 
     @PostMapping
@@ -53,7 +52,6 @@ public class PortfolioController {
                         portfolioId,
                         request
                 );
-
         return ResponseEntity.ok(response);
     }
 
