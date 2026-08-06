@@ -3,6 +3,7 @@ package com.playandhold.portfolio_service.portofolio;
 import com.playandhold.portfolio_service.portofolio.dto.CreatePortfolioRequest;
 import com.playandhold.portfolio_service.portofolio.dto.PortfolioResponse;
 import com.playandhold.portfolio_service.portofolio.dto.UpdatePortfolioRequest;
+import com.playandhold.portfolio_service.portofolio.exception.PortfolioNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,14 @@ public class PortfolioService {
     public PortfolioResponse getPortfolio(UUID userId, UUID portfolioId) {
         Portfolio portfolio = portfolioRepository
                 .findByUserIdAndPortfolioId(userId, portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " + portfolioId));
+                .orElseThrow(() -> new PortfolioNotFoundException(portfolioId));
 
         return portfolioMapper.toDto(portfolio);
     }
 
     public PortfolioResponse updatePortfolio(UUID userId, UUID portfolioId, UpdatePortfolioRequest request) {
         Portfolio portfolio = portfolioRepository.findByUserIdAndPortfolioId(userId, portfolioId)
-                        .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " +portfolioId));
+                        .orElseThrow(() -> new PortfolioNotFoundException(portfolioId));
 
         portfolioMapper.updatePortfolioDto(portfolio, request);
         Portfolio savedPortfolio = portfolioRepository.save(portfolio);
@@ -44,11 +45,11 @@ public class PortfolioService {
 
     public String deletePortfolio(UUID userId, UUID portfolioId) {
         Portfolio portfolio = portfolioRepository.findByUserIdAndPortfolioId(userId, portfolioId)
-                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " +portfolioId));
+                .orElseThrow(() -> new PortfolioNotFoundException(portfolioId));
 
         portfolioRepository.delete(portfolio);
 
-        return "Portfolio " + portfolioId + " was deleted with successfully.";
+        return "Portfolio with ID " + portfolioId + " was deleted with successfully.";
     }
 
 }

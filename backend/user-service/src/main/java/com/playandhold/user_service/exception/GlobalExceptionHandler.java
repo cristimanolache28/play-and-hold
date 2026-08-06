@@ -6,7 +6,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.time.LocalDateTime;
 
@@ -68,7 +67,6 @@ public class GlobalExceptionHandler {
                 exception.getMessage(),
                 request.getRequestURI()
         );
-
         return ResponseEntity
                 .status(status)
                 .body(errorResponse);
