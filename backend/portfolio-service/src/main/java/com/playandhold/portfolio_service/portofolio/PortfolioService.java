@@ -37,15 +37,18 @@ public class PortfolioService {
         Portfolio portfolio = portfolioRepository.findByUserIdAndPortfolioId(userId, portfolioId)
                         .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " +portfolioId));
 
-        portfolioMapper.updatePortfolioDto(
-                portfolio,
-                request
-        );
-
-        Portfolio savedPortfolio =
-                portfolioRepository.save(portfolio);
-
+        portfolioMapper.updatePortfolioDto(portfolio, request);
+        Portfolio savedPortfolio = portfolioRepository.save(portfolio);
         return portfolioMapper.toDto(savedPortfolio);
+    }
+
+    public String deletePortfolio(UUID userId, UUID portfolioId) {
+        Portfolio portfolio = portfolioRepository.findByUserIdAndPortfolioId(userId, portfolioId)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found: " +portfolioId));
+
+        portfolioRepository.delete(portfolio);
+
+        return "Portfolio " + portfolioId + " was deleted with successfully.";
     }
 
 }
