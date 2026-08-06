@@ -56,4 +56,12 @@ public class PortfolioController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{portfolioId}")
+    public String deletePortfolio(
+            @RequestHeader("X-User-Id") UUID userId,
+            @PathVariable UUID portfolioId
+    ) {
+        return portfolioService.deletePortfolio(userId, portfolioId);
+    }
 }
