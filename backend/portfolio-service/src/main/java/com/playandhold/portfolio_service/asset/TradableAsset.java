@@ -25,42 +25,23 @@ public class TradableAsset {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(
-            name = "tradable_asset_id",
-            nullable = false,
-            updatable = false
-    )
+    @Column(name = "tradable_asset_id", nullable = false, updatable = false)
     private UUID id;
 
     @Column(nullable = false, length = 20)
     private String symbol;
 
-    @Column(
-            name = "display_name",
-            nullable = false,
-            length = 150
-    )
+    @Column(name = "display_name", nullable = false, length = 150)
     private String displayName;
 
-    @Column(
-            name = "exchange_code",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "exchange_code", nullable = false, length = 20)
     private String exchangeCode;
 
-    @Column(
-            nullable = false,
-            length = 3
-    )
+    @Column(nullable = false, length = 3)
     private String currency;
 
     @Enumerated(EnumType.STRING)
-    @Column(
-            name = "asset_type",
-            nullable = false,
-            length = 20
-    )
+    @Column(name = "asset_type", nullable = false, length = 20)
     private AssetType assetType;
 
     @Column(length = 100)
