@@ -2,12 +2,13 @@ package com.playandhold.portfolio_service.asset;
 
 import com.playandhold.portfolio_service.asset.dto.CreateTradableAssetRequest;
 import com.playandhold.portfolio_service.asset.dto.TradableAssetResponse;
+import org.springframework.stereotype.Component;
 
-import java.util.UUID;
 
+@Component
 public class TradableAssetMapper {
 
-    public TradableAsset toEntity(UUID id, CreateTradableAssetRequest request) {
+    public TradableAsset toEntity(CreateTradableAssetRequest request) {
         TradableAsset tradableAsset = new TradableAsset();
         tradableAsset.setSymbol(request.symbol());
         tradableAsset.setDisplayName(request.displayName());
@@ -16,6 +17,7 @@ public class TradableAssetMapper {
         tradableAsset.setAssetType(request.assetType());
         tradableAsset.setSector(request.sector());
         tradableAsset.setIndustry(request.industry());
+        tradableAsset.setActive(true);
 
         return tradableAsset;
     }
