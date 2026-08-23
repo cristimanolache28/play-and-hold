@@ -12,12 +12,11 @@ public class PortfolioTransactionMapper {
 
     public PortfolioTransaction toEntity(
             UUID portfolioId,
-            CreatePortfolioTransactionRequest request
-    ) {
-
+            UUID tradableAssetId,
+            CreatePortfolioTransactionRequest request) {
         return PortfolioTransaction.builder()
                 .portfolioId(portfolioId)
-                .tradableAssetId(request.tradableAssetId())
+                .tradableAssetId(tradableAssetId)
                 .brokerageAccountId(request.brokerageAccountId())
                 .transactionType(request.transactionType())
                 .quantity(request.quantity())
