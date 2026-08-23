@@ -1,5 +1,6 @@
 package com.playandhold.portfolio_service.portofolio.exception;
 
+import com.playandhold.portfolio_service.transaction.exception.PortfolioTransactionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,26 @@ public class GlobalExceptionHandler {
                 .status(status)
                 .body(errorResponse);
 
+    }
+
+    @ExceptionHandler(PortfolioTransactionNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleTransactionNotFoundException(
+            PortfolioTransactionNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        log.warn("The transaction can not be found -> {}", exception.getMessage());
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        ApiErrorResponse response = new ApiErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                exception.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(response);
     }
 
 }
