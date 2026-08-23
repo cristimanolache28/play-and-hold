@@ -1,9 +1,7 @@
 package com.playandhold.portfolio_service.transaction.dto;
 
 import com.playandhold.portfolio_service.transaction.TransactionType;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -11,8 +9,9 @@ import java.util.UUID;
 
 public record CreatePortfolioTransactionRequest(
 
-        @NotNull(message = "Tradable asset id is required")
-        UUID tradableAssetId,
+        @NotBlank(message = "Symbol is required")
+        @Size(max = 20, message = "Symbol must not exceed 20 characters")
+        String symbol,
 
         @NotNull(message = "Brokerage account id is required")
         UUID brokerageAccountId,

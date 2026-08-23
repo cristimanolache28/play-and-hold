@@ -1,5 +1,6 @@
 package com.playandhold.portfolio_service.transaction;
 
+import com.playandhold.portfolio_service.asset.TradableAsset;
 import com.playandhold.portfolio_service.asset.TradableAssetRepository;
 import com.playandhold.portfolio_service.brokerage.BrokerageAccountRepository;
 import com.playandhold.portfolio_service.positionlot.PositionLotService;
@@ -7,6 +8,7 @@ import com.playandhold.portfolio_service.transaction.dto.CreatePortfolioTransact
 import com.playandhold.portfolio_service.transaction.dto.PortfolioTransactionResponse;
 import com.playandhold.portfolio_service.transaction.dto.UpdatePortfolioTransactionRequest;
 import com.playandhold.portfolio_service.transaction.exception.PortfolioTransactionNotFoundException;
+import com.playandhold.portfolio_service.transaction.exception.TradableAssetNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,25 +28,28 @@ public class PortfolioTransactionService {
 
     @Transactional
     public PortfolioTransactionResponse createTransaction(UUID portfolioId, CreatePortfolioTransactionRequest request) {
-        validateTradableAsset(request.tradableAssetId());
+        TradableAsset tradableAsset =
+                tradableAssetRepository
+                        .findBySymbolIgnoreCase(request.symbol())
+                        .orElseThrow(
+                                () -> new TradableAssetNotFoundException(request.symbol())
+                        );
+
         validateBrokerageAccount(portfolioId, request.brokerageAccountId());
 
         PortfolioTransaction transaction =
-                mapper.toEntity(portfolioId, request);
+                mapper.toEntity(
+                        portfolioId,
+                        tradableAsset.getId(),
+                        request
+                );
 
-        PortfolioTransaction savedTransaction =
-                transactionRepository.save(transaction);
-
-        System.out.println(
-                "TRANSACTION TYPE = " + savedTransaction.getTransactionType()
-        );
+        PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
 
         if (savedTransaction.getTransactionType() == TransactionType.BUY) {
-
-            System.out.println(">>> BUY DETECTED - CREATE LOT");
-
             positionLotService.createLot(savedTransaction);
         }
+
         return mapper.toDto(savedTransaction);
     }
 

@@ -1,5 +1,6 @@
 package com.playandhold.portfolio_service.transaction;
 
+import com.playandhold.portfolio_service.asset.TradableAsset;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,8 +12,6 @@ public interface PortfolioTransactionRepository
 
     List<PortfolioTransaction> findAllByPortfolioId(UUID portfolioId);
 
-    Optional<PortfolioTransaction> findByIdAndPortfolioId(
-            UUID id,
-            UUID portfolioId
-    );
+    Optional<PortfolioTransaction> findByIdAndPortfolioId(UUID id, UUID portfolioId);
+
 }
