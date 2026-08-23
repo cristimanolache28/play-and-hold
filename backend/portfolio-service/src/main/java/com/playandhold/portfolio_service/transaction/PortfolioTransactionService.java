@@ -2,6 +2,7 @@ package com.playandhold.portfolio_service.transaction;
 
 import com.playandhold.portfolio_service.asset.TradableAssetRepository;
 import com.playandhold.portfolio_service.brokerage.BrokerageAccountRepository;
+import com.playandhold.portfolio_service.positionlot.PositionLotService;
 import com.playandhold.portfolio_service.transaction.dto.CreatePortfolioTransactionRequest;
 import com.playandhold.portfolio_service.transaction.dto.PortfolioTransactionResponse;
 import com.playandhold.portfolio_service.transaction.dto.UpdatePortfolioTransactionRequest;
@@ -21,16 +22,29 @@ public class PortfolioTransactionService {
     private final BrokerageAccountRepository brokerageAccountRepository;
     private final PortfolioTransactionMapper mapper;
     private final TradableAssetRepository tradableAssetRepository;
+    private final PositionLotService positionLotService;
 
     @Transactional
     public PortfolioTransactionResponse createTransaction(UUID portfolioId, CreatePortfolioTransactionRequest request) {
         validateTradableAsset(request.tradableAssetId());
         validateBrokerageAccount(portfolioId, request.brokerageAccountId());
 
-        PortfolioTransaction transaction = mapper.toEntity(portfolioId, request);
+        PortfolioTransaction transaction =
+                mapper.toEntity(portfolioId, request);
 
-        PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
+        PortfolioTransaction savedTransaction =
+                transactionRepository.save(transaction);
 
+        System.out.println(
+                "TRANSACTION TYPE = " + savedTransaction.getTransactionType()
+        );
+
+        if (savedTransaction.getTransactionType() == TransactionType.BUY) {
+
+            System.out.println(">>> BUY DETECTED - CREATE LOT");
+
+            positionLotService.createLot(savedTransaction);
+        }
         return mapper.toDto(savedTransaction);
     }
 
