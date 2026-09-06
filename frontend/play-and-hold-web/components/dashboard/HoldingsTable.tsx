@@ -4,6 +4,7 @@ import {
   formatSignedCurrency,
   formatSignedPercentage,
 } from "@/lib/formatters";
+import { calculateHoldingMetrics } from "@/lib/holdingCalculations";
 
 type HoldingsTableProps = {
   holdings: Holding[];
@@ -50,18 +51,10 @@ export default function HoldingsTable({ holdings }: HoldingsTableProps) {
 
         <tbody>
           {holdings.map((holding) => {
-            const marketValue = holding.quantity * holding.marketPrice;
-
-            const profitLoss =
-              (holding.marketPrice - holding.averagePrice) * holding.quantity;
-
-            const returnPercentage =
-              ((holding.marketPrice - holding.averagePrice) /
-                holding.averagePrice) *
-              100;
-
+            const { marketValue, profitLoss, returnPercentage } =
+              calculateHoldingMetrics(holding);
             const isPositive = profitLoss >= 0;
-
+            
             return (
               <tr key={holding.symbol} className="border-t border-gray-100">
                 <td className="px-6 py-4">
