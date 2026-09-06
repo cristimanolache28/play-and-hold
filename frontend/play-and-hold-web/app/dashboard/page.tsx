@@ -1,13 +1,23 @@
-import SummaryCard from "@/components/dashboard/SummaryCard";
 import HoldingsTable from "@/components/dashboard/HoldingsTable";
+import SummaryCard from "@/components/dashboard/SummaryCard";
 import { mockHoldings } from "@/data/mockHoldings";
+import {
+  calculatePortfolioValue,
+  calculateTotalProfitLoss,
+  calculateTotalReturn,
+} from "@/lib/portfolioCalculations";
 
 export default function DashboardPage() {
+  const portfolioValue = calculatePortfolioValue(mockHoldings);
+
+  const totalProfitLoss = calculateTotalProfitLoss(mockHoldings);
+
+  const totalReturn = calculateTotalReturn(mockHoldings);
+
+  const positionsCount = mockHoldings.length;
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">
-        Dashboard
-      </h1>
+      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
 
       <p className="mt-2 text-gray-500">
         Overview of your investment portfolio.
@@ -16,16 +26,20 @@ export default function DashboardPage() {
       <div className="mt-8 grid grid-cols-2 gap-4">
         <SummaryCard
           title="Portfolio Value"
-          value="$12,450.32"
-          change="+3.24% this month"
-          trend="up"
+          value={formatCurrency(portfolioValue)}
         />
 
         <SummaryCard
           title="Total Return"
-          value="+$1,240.18"
-          change="+11.06%"
-          trend="up"
+          value={formatSignedCurrency(totalProfitLoss)}
+          change={formatSignedPercentage(totalReturn)}
+          trend={
+            totalProfitLoss > 0
+              ? "up"
+              : totalProfitLoss < 0
+                ? "down"
+                : "neutral"
+          }
         />
 
         <SummaryCard
@@ -35,12 +49,10 @@ export default function DashboardPage() {
           trend="down"
         />
 
-        <SummaryCard
-          title="Positions"
-          value="7"
-        />
+        <SummaryCard title="Positions" value={positionsCount.toString()} />
       </div>
-       <HoldingsTable holdings={mockHoldings} />
+
+      <HoldingsTable holdings={mockHoldings} />
     </div>
   );
 }
