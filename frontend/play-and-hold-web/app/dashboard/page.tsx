@@ -1,11 +1,19 @@
 import HoldingsTable from "@/components/dashboard/HoldingsTable";
 import SummaryCard from "@/components/dashboard/SummaryCard";
 import { mockHoldings } from "@/data/mockHoldings";
+
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  formatSignedPercentage,
+} from "@/lib/formatters";
+
 import {
   calculatePortfolioValue,
   calculateTotalProfitLoss,
   calculateTotalReturn,
 } from "@/lib/portfolioCalculations";
+
 
 export default function DashboardPage() {
   const portfolioValue = calculatePortfolioValue(mockHoldings);
