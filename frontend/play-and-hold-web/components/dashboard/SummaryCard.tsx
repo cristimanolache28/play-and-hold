@@ -1,20 +1,23 @@
+type SummaryCardChange = {
+  value: number;
+  label: string;
+};
+
 type SummaryCardProps = {
   title: string;
   value: string;
-  change?: string;
-  trend?: "up" | "down" | "neutral";
+  change?: SummaryCardChange;
 };
 
 export default function SummaryCard({
   title,
   value,
   change,
-  trend = "neutral",
 }: SummaryCardProps) {
   const changeColor =
-    trend === "up"
+    change && change.value > 0
       ? "text-green-600"
-      : trend === "down"
+      : change && change.value < 0
         ? "text-red-600"
         : "text-gray-500";
 
@@ -30,7 +33,7 @@ export default function SummaryCard({
 
       {change && (
         <p className={`mt-2 text-sm font-medium ${changeColor}`}>
-          {change}
+          {change.label}
         </p>
       )}
     </div>

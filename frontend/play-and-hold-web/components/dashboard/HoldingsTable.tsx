@@ -20,17 +20,6 @@ export default function HoldingsTable({ holdings }: HoldingsTableProps) {
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
-              Value
-            </th>
-
-            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
-              P/L
-            </th>
-
-            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
-              Return
-            </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
               Asset
             </th>
@@ -46,6 +35,18 @@ export default function HoldingsTable({ holdings }: HoldingsTableProps) {
             <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
               Market Price
             </th>
+
+            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
+              Value
+            </th>
+
+            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
+              P/L
+            </th>
+
+            <th className="px-6 py-3 text-right text-sm font-medium text-gray-500">
+              Return
+            </th>
           </tr>
         </thead>
 
@@ -54,7 +55,7 @@ export default function HoldingsTable({ holdings }: HoldingsTableProps) {
             const { marketValue, profitLoss, returnPercentage } =
               calculateHoldingMetrics(holding);
             const isPositive = profitLoss >= 0;
-            
+
             return (
               <tr key={holding.symbol} className="border-t border-gray-100">
                 <td className="px-6 py-4">

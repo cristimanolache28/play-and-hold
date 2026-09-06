@@ -14,7 +14,6 @@ import {
   calculateTotalReturn,
 } from "@/lib/portfolioCalculations";
 
-
 export default function DashboardPage() {
   const portfolioValue = calculatePortfolioValue(mockHoldings);
 
@@ -25,9 +24,9 @@ export default function DashboardPage() {
   const positionsCount = mockHoldings.length;
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-3xl font-bold text-white">Dashboard</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 text-gray-400">
         Overview of your investment portfolio.
       </p>
 
@@ -40,21 +39,19 @@ export default function DashboardPage() {
         <SummaryCard
           title="Total Return"
           value={formatSignedCurrency(totalProfitLoss)}
-          change={formatSignedPercentage(totalReturn)}
-          trend={
-            totalProfitLoss > 0
-              ? "up"
-              : totalProfitLoss < 0
-                ? "down"
-                : "neutral"
-          }
+          change={{
+            value: totalReturn,
+            label: formatSignedPercentage(totalReturn),
+          }}
         />
 
         <SummaryCard
           title="Daily P/L"
           value="-$142.80"
-          change="-1.12% today"
-          trend="down"
+          change={{
+            value: -1.12,
+            label: "-1.12% today",
+          }}
         />
 
         <SummaryCard title="Positions" value={positionsCount.toString()} />
