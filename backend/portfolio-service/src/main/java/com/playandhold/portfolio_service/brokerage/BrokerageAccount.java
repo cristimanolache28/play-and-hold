@@ -31,6 +31,14 @@ public class BrokerageAccount {
     @Column(nullable = false, length = 3)
     private String currency;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sell_mode", nullable = false, length = 20)
+    private SellMode sellMode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "lot_allocation_method", length = 10)
+    private LotAllocationMethod lotAllocationMethod;
+
     @Column(nullable = false)
     private boolean active;
 }
