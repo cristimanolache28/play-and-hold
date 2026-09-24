@@ -3,7 +3,7 @@ package com.playandhold.portfolio_service.transaction.dto;
 import com.playandhold.portfolio_service.transaction.TransactionType;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 public record PortfolioTransactionResponse(
@@ -15,7 +15,9 @@ public record PortfolioTransactionResponse(
         TransactionType transactionType,
         BigDecimal quantity,
         BigDecimal price,
-        LocalDate transactionDate
+        BigDecimal fees,
+        Instant executedAt,
+        String notes
 
 ) {
 }

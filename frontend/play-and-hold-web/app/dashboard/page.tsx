@@ -1,4 +1,4 @@
-import HoldingsTable from "@/components/dashboard/HoldingsTable";
+import HoldingsTable from "@/components/portfolio/HoldingsTable";
 import SummaryCard from "@/components/dashboard/SummaryCard";
 import { mockHoldings } from "@/data/mockHoldings";
 

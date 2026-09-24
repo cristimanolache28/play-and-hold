@@ -50,7 +50,7 @@ public class PortfolioTransactionService {
             positionLotService.createLot(savedTransaction);
         }
 
-        return mapper.toDto(savedTransaction);
+        return mapper.toResponse(savedTransaction);
     }
 
     @Transactional(readOnly = true)
@@ -58,7 +58,7 @@ public class PortfolioTransactionService {
     ) {
         PortfolioTransaction transaction = findTransaction(portfolioId, transactionId);
 
-        return mapper.toDto(transaction);
+        return mapper.toResponse(transaction);
     }
 
     @Transactional(readOnly = true)
@@ -66,7 +66,7 @@ public class PortfolioTransactionService {
         return transactionRepository
                 .findAllByPortfolioId(portfolioId)
                 .stream()
-                .map(mapper::toDto)
+                .map(mapper::toResponse)
                 .toList();
     }
 
@@ -80,7 +80,7 @@ public class PortfolioTransactionService {
 
         PortfolioTransaction updatedTransaction = transactionRepository.save(transaction);
 
-        return mapper.toDto(updatedTransaction);
+        return mapper.toResponse(updatedTransaction);
     }
 
     @Transactional

@@ -4,9 +4,10 @@ import com.playandhold.portfolio_service.transaction.TransactionType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 public record UpdatePortfolioTransactionRequest(
@@ -34,9 +35,16 @@ public record UpdatePortfolioTransactionRequest(
         )
         BigDecimal price,
 
-        @NotNull(message = "Transaction date is required")
-        @PastOrPresent(message = "Transaction date cannot be in the future")
-        LocalDate transactionDate
+        @NotNull
+        @DecimalMin(value = "0.0", inclusive = true)
+        BigDecimal fees,
+
+        @NotNull
+        @PastOrPresent
+        Instant executedAt,
+
+        @Size(max = 500)
+        String notes
 
 ) {
 }

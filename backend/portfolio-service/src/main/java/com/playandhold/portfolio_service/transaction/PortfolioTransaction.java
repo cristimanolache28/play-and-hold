@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -40,6 +40,13 @@ public class PortfolioTransaction {
     @Column(nullable = false, precision = 19, scale = 8)
     private BigDecimal price;
 
-    @Column(name = "transaction_date", nullable = false)
-    private LocalDate transactionDate;
+    @Column(name = "fees", nullable = false, precision = 19, scale = 8)
+    private BigDecimal fees;
+
+    @Column(name = "executed_at", nullable = false)
+    private Instant executedAt;
+
+    @Column(name = "notes", length = 500)
+    private String notes;
+
 }
