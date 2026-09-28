@@ -75,6 +75,7 @@ public class PortfolioTransactionService {
         PortfolioTransaction transaction = findTransaction(portfolioId, transactionId);
 
         validateBrokerageAccount(portfolioId, request.brokerageAccountId());
+        validateTradableAsset(request.tradableAssetId());
 
         mapper.updateEntity(transaction, request);
 
