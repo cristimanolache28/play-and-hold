@@ -9,6 +9,9 @@ import com.playandhold.portfolio_service.transaction.dto.PortfolioTransactionRes
 import com.playandhold.portfolio_service.transaction.dto.UpdatePortfolioTransactionRequest;
 import com.playandhold.portfolio_service.transaction.exception.PortfolioTransactionNotFoundException;
 import com.playandhold.portfolio_service.transaction.exception.TradableAssetNotFoundException;
+import com.playandhold.portfolio_service.brokerage.BrokerageAccount;
+import com.playandhold.portfolio_service.brokerage.SellMode;
+import com.playandhold.portfolio_service.brokerageposition.BrokeragePositionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ public class PortfolioTransactionService {
     private final PortfolioTransactionMapper mapper;
     private final TradableAssetRepository tradableAssetRepository;
     private final PositionLotService positionLotService;
+    private final BrokeragePositionService brokeragePositionService;
 
     @Transactional
     public PortfolioTransactionResponse createTransaction(UUID portfolioId, CreatePortfolioTransactionRequest request) {
@@ -35,19 +39,20 @@ public class PortfolioTransactionService {
                                 () -> new TradableAssetNotFoundException(request.symbol())
                         );
 
-        validateBrokerageAccount(portfolioId, request.brokerageAccountId());
+        BrokerageAccount brokerageAccount = findBrokerageAccount(portfolioId, request.brokerageAccountId());
 
-        PortfolioTransaction transaction =
-                mapper.toEntity(
-                        portfolioId,
-                        tradableAsset.getId(),
-                        request
-                );
+        PortfolioTransaction transaction = mapper.toEntity(portfolioId, tradableAsset.getId(), request);
 
         PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
 
         if (savedTransaction.getTransactionType() == TransactionType.BUY) {
-            positionLotService.createLot(savedTransaction);
+            if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
+                positionLotService.createLot(savedTransaction);
+            } else if (
+                    brokerageAccount.getSellMode() == SellMode.POSITION_BASED
+            ) {
+                brokeragePositionService.applyBuy(savedTransaction);
+            }
         }
 
         return mapper.toResponse(savedTransaction);
@@ -74,7 +79,7 @@ public class PortfolioTransactionService {
     public PortfolioTransactionResponse updateTransaction(UUID portfolioId, UUID transactionId, UpdatePortfolioTransactionRequest request) {
         PortfolioTransaction transaction = findTransaction(portfolioId, transactionId);
 
-        validateBrokerageAccount(portfolioId, request.brokerageAccountId());
+        findBrokerageAccount(portfolioId, request.brokerageAccountId());
         validateTradableAsset(request.tradableAssetId());
 
         mapper.updateEntity(transaction, request);
@@ -105,9 +110,12 @@ public class PortfolioTransactionService {
                 );
     }
 
-    private void validateBrokerageAccount(UUID portfolioId, UUID brokerageAccountId
+    private BrokerageAccount findBrokerageAccount(
+            UUID portfolioId,
+            UUID brokerageAccountId
     ) {
-        brokerageAccountRepository.findByIdAndPortfolioId(brokerageAccountId, portfolioId)
+        return brokerageAccountRepository
+                .findByIdAndPortfolioId(brokerageAccountId, portfolioId)
                 .orElseThrow(
                         () -> new IllegalArgumentException("Brokerage account does not belong to this portfolio")
                 );

@@ -31,6 +31,8 @@ public class BrokerageAccountMapper {
                 brokerageAccount.getBrokerName(),
                 brokerageAccount.getAccountName(),
                 brokerageAccount.getCurrency(),
+                brokerageAccount.getSellMode(),
+                brokerageAccount.getLotAllocationMethod(),
                 brokerageAccount.isActive()
         );
     }

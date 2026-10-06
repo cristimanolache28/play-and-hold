@@ -20,6 +20,11 @@ public class BrokerageAccountService {
 
     @Transactional
     public BrokerageAccountResponse createBrokerageAccount(UUID portfolioId, CreateBrokerageAccountRequest request) {
+        validateSellBehavior(
+                request.sellMode(),
+                request.lotAllocationMethod()
+        );
+
         BrokerageAccount brokerageAccount =
                 mapper.toEntity(portfolioId, request);
 
