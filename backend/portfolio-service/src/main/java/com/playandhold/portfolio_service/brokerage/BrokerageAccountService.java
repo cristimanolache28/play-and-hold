@@ -20,6 +20,11 @@ public class BrokerageAccountService {
 
     @Transactional
     public BrokerageAccountResponse createBrokerageAccount(UUID portfolioId, CreateBrokerageAccountRequest request) {
+        validateSellBehavior(
+                request.sellMode(),
+                request.lotAllocationMethod()
+        );
+
         BrokerageAccount brokerageAccount =
                 mapper.toEntity(portfolioId, request);
 
@@ -75,5 +80,24 @@ public class BrokerageAccountService {
                 .orElseThrow(
                         () -> new BrokerageAccountNotFoundException(portfolioId, brokerageAccountId)
                 );
+    }
+
+    private void validateSellBehavior(
+            SellMode sellMode,
+            LotAllocationMethod lotAllocationMethod
+    ) {
+        if (sellMode == SellMode.POSITION_BASED
+                && lotAllocationMethod != null) {
+            throw new IllegalArgumentException(
+                    "POSITION_BASED accounts must not define a lot allocation method"
+            );
+        }
+
+        if (sellMode == SellMode.LOT_BASED
+                && lotAllocationMethod == null) {
+            throw new IllegalArgumentException(
+                    "LOT_BASED accounts must define FIFO or LIFO allocation"
+            );
+        }
     }
 }

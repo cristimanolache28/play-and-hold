@@ -18,7 +18,6 @@ public class PositionLotService {
 
     @Transactional
     public PositionLot createLot(PortfolioTransaction transaction) {
-        System.out.println(">>> createLot() WAS CALLED");
 
         if (transaction.getTransactionType() != TransactionType.BUY) {
             throw new IllegalArgumentException(
@@ -34,11 +33,6 @@ public class PositionLotService {
                 .quantity(transaction.getQuantity())
                 .status(LotStatus.OPEN)
                 .build();
-
-        PositionLot savedLot =
-                positionLotRepository.save(positionLot);
-
-        System.out.println(">>> POSITION LOT SAVED: " + savedLot.getId());
 
         return positionLotRepository.save(positionLot);
     }

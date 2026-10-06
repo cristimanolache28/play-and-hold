@@ -1,6 +1,9 @@
 package com.playandhold.portfolio_service.brokerage.dto;
 
+import com.playandhold.portfolio_service.brokerage.LotAllocationMethod;
+import com.playandhold.portfolio_service.brokerage.SellMode;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
@@ -18,7 +21,12 @@ public record CreateBrokerageAccountRequest(
                 regexp = "^[A-Z]{3}$",
                 message = "Currency must contain exactly 3 uppercase letters"
         )
-        String currency
+        String currency,
+
+        @NotNull(message = "Sell mode is required")
+        SellMode sellMode,
+
+        LotAllocationMethod lotAllocationMethod
 
 ) {
 }
