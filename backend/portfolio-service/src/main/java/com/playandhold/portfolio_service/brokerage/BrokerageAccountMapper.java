@@ -18,6 +18,8 @@ public class BrokerageAccountMapper {
         brokerageAccount.setAccountName(request.accountName());
         brokerageAccount.setCurrency(request.currency());
         brokerageAccount.setActive(true);
+        brokerageAccount.setSellMode(request.sellMode());
+        brokerageAccount.setLotAllocationMethod(request.lotAllocationMethod());
 
         return brokerageAccount;
     }
