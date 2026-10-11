@@ -1,5 +1,6 @@
 package com.playandhold.portfolio_service.positionlot;
 
+import com.playandhold.portfolio_service.brokerage.LotAllocationMethod;
 import com.playandhold.portfolio_service.transaction.PortfolioTransaction;
 import com.playandhold.portfolio_service.transaction.TransactionType;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,42 @@ public class PositionLotService {
                         BigDecimal.ZERO,
                         BigDecimal::add
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForLifo(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId
+    ) {
+        return positionLotRepository.findLotsOrderedByBuyExecutedAtDesc(
+                portfolioId,
+                tradableAssetId,
+                brokerageAccountId,
+                LotStatus.OPEN
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForAllocation(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId,
+            LotAllocationMethod allocationMethod
+    ) {
+        return switch (allocationMethod) {
+            case FIFO -> getOpenLotsForFifo(
+                    portfolioId,
+                    tradableAssetId,
+                    brokerageAccountId
+            );
+
+            case LIFO -> getOpenLotsForLifo(
+                    portfolioId,
+                    tradableAssetId,
+                    brokerageAccountId
+            );
+        };
     }
 
     @Transactional(readOnly = true)

@@ -41,4 +41,22 @@ public interface PositionLotRepository
             @Param("brokerageAccountId") UUID brokerageAccountId,
             @Param("status") LotStatus status
     );
+
+    @Query("""
+        SELECT lot
+        FROM PositionLot lot
+        JOIN PortfolioTransaction transaction
+            ON transaction.id = lot.buyTransactionId
+        WHERE lot.portfolioId = :portfolioId
+          AND lot.tradableAssetId = :tradableAssetId
+          AND lot.brokerageAccountId = :brokerageAccountId
+          AND lot.status = :status
+        ORDER BY transaction.executedAt DESC, transaction.id DESC
+        """)
+    List<PositionLot> findLotsOrderedByBuyExecutedAtDesc(
+            @Param("portfolioId") UUID portfolioId,
+            @Param("tradableAssetId") UUID tradableAssetId,
+            @Param("brokerageAccountId") UUID brokerageAccountId,
+            @Param("status") LotStatus status
+    );
 }

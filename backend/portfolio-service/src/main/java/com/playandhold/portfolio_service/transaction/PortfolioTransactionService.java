@@ -42,31 +42,17 @@ public class PortfolioTransactionService {
                 tradableAssetRepository
                         .findBySymbolIgnoreCase(request.symbol())
                         .orElseThrow(
-                                () -> new TradableAssetNotFoundException(
-                                        request.symbol()
-                                )
+                                () -> new TradableAssetNotFoundException(request.symbol())
                         );
 
-        BrokerageAccount brokerageAccount =
-                findBrokerageAccount(
-                        portfolioId,
-                        request.brokerageAccountId()
-                );
+        BrokerageAccount brokerageAccount = findBrokerageAccount(portfolioId, request.brokerageAccountId());
 
         PortfolioTransaction transaction =
-                mapper.toEntity(
-                        portfolioId,
-                        tradableAsset.getId(),
-                        request
-                );
+                mapper.toEntity(portfolioId, tradableAsset.getId(), request);
 
-        PortfolioTransaction savedTransaction =
-                transactionRepository.save(transaction);
+        PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
 
-        applyTransactionEffects(
-                savedTransaction,
-                brokerageAccount
-        );
+        applyTransactionEffects(savedTransaction, brokerageAccount);
 
         return mapper.toResponse(savedTransaction);
     }
@@ -104,11 +90,7 @@ public class PortfolioTransactionService {
 
     @Transactional
     public void deleteTransaction(UUID portfolioId, UUID transactionId) {
-        PortfolioTransaction transaction =
-                findTransaction(
-                        portfolioId,
-                        transactionId
-                );
+        PortfolioTransaction transaction = findTransaction(portfolioId, transactionId);
 
         transactionRepository.delete(transaction);
     }
@@ -116,17 +98,11 @@ public class PortfolioTransactionService {
     private PortfolioTransaction findTransaction(UUID portfolioId, UUID transactionId) {
         return transactionRepository.findByIdAndPortfolioId(transactionId, portfolioId)
                 .orElseThrow(
-                        () -> new PortfolioTransactionNotFoundException(
-                                portfolioId,
-                                transactionId
-                        )
+                        () -> new PortfolioTransactionNotFoundException(portfolioId, transactionId)
                 );
     }
 
-    private BrokerageAccount findBrokerageAccount(
-            UUID portfolioId,
-            UUID brokerageAccountId
-    ) {
+    private BrokerageAccount findBrokerageAccount(UUID portfolioId, UUID brokerageAccountId) {
         return brokerageAccountRepository
                 .findByIdAndPortfolioId(brokerageAccountId, portfolioId)
                 .orElseThrow(
@@ -161,35 +137,14 @@ public class PortfolioTransactionService {
         }
     }
 
-    private void handleSell(
-            PortfolioTransaction transaction,
-            BrokerageAccount brokerageAccount
-    ) {
-        System.out.println("### HANDLE SELL REACHED ###");
-        System.out.println("Sell mode: " + brokerageAccount.getSellMode());
-        System.out.println("Allocation method: " + brokerageAccount.getLotAllocationMethod());
-
+    private void handleSell(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
         if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
-            throw new UnsupportedOperationException(
-                    "POSITION_BASED sell is not implemented yet"
-            );
+            throw new UnsupportedOperationException("POSITION_BASED sell is not implemented yet");
         }
 
         if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
-            if (brokerageAccount.getLotAllocationMethod()
-                    == LotAllocationMethod.FIFO) {
-
-                System.out.println("### FIFO BRANCH REACHED ###");
-
-                sellAllocationService.applyFifoSell(transaction);
-                return;
-            }
-
-            throw new UnsupportedOperationException(
-                    "LIFO sell is not implemented yet"
+            sellAllocationService.applyLotBasedSell(transaction, brokerageAccount.getLotAllocationMethod()
             );
         }
     }
-
-
 }
