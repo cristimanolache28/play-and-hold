@@ -1,5 +1,6 @@
 package com.playandhold.portfolio_service.positionlot;
 
+import com.playandhold.portfolio_service.brokerage.LotAllocationMethod;
 import com.playandhold.portfolio_service.transaction.PortfolioTransaction;
 import com.playandhold.portfolio_service.transaction.TransactionType;
 import lombok.RequiredArgsConstructor;
@@ -57,5 +58,75 @@ public class PositionLotService {
                         BigDecimal.ZERO,
                         BigDecimal::add
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForLifo(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId
+    ) {
+        return positionLotRepository.findLotsOrderedByBuyExecutedAtDesc(
+                portfolioId,
+                tradableAssetId,
+                brokerageAccountId,
+                LotStatus.OPEN
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForAllocation(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId,
+            LotAllocationMethod allocationMethod
+    ) {
+        return switch (allocationMethod) {
+            case FIFO -> getOpenLotsForFifo(
+                    portfolioId,
+                    tradableAssetId,
+                    brokerageAccountId
+            );
+
+            case LIFO -> getOpenLotsForLifo(
+                    portfolioId,
+                    tradableAssetId,
+                    brokerageAccountId
+            );
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForFifo(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId
+    ) {
+        return positionLotRepository.findLotsOrderedByBuyExecutedAtAsc(
+                portfolioId,
+                tradableAssetId,
+                brokerageAccountId,
+                LotStatus.OPEN
+        );
+    }
+
+    @Transactional
+    public PositionLot consumeQuantity(PositionLot lot, BigDecimal quantityToConsume) {
+        if (quantityToConsume.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Quantity to consume must be greater than zero");
+        }
+
+        if (quantityToConsume.compareTo(lot.getQuantity()) > 0) {
+            throw new IllegalArgumentException("Cannot consume more than the available lot quantity");
+        }
+
+        BigDecimal remainingQuantity = lot.getQuantity().subtract(quantityToConsume);
+        lot.setQuantity(remainingQuantity);
+
+        if (remainingQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            lot.setStatus(LotStatus.CLOSED);
+        }
+
+        return positionLotRepository.save(lot);
     }
 }

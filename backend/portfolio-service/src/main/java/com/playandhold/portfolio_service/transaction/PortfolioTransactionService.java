@@ -15,6 +15,8 @@ import com.playandhold.portfolio_service.brokerageposition.BrokeragePositionServ
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.playandhold.portfolio_service.brokerage.LotAllocationMethod;
+import com.playandhold.portfolio_service.sellallocation.SellAllocationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,9 +31,13 @@ public class PortfolioTransactionService {
     private final TradableAssetRepository tradableAssetRepository;
     private final PositionLotService positionLotService;
     private final BrokeragePositionService brokeragePositionService;
+    private final SellAllocationService sellAllocationService;
 
     @Transactional
-    public PortfolioTransactionResponse createTransaction(UUID portfolioId, CreatePortfolioTransactionRequest request) {
+    public PortfolioTransactionResponse createTransaction(
+            UUID portfolioId,
+            CreatePortfolioTransactionRequest request
+    ) {
         TradableAsset tradableAsset =
                 tradableAssetRepository
                         .findBySymbolIgnoreCase(request.symbol())
@@ -41,19 +47,12 @@ public class PortfolioTransactionService {
 
         BrokerageAccount brokerageAccount = findBrokerageAccount(portfolioId, request.brokerageAccountId());
 
-        PortfolioTransaction transaction = mapper.toEntity(portfolioId, tradableAsset.getId(), request);
+        PortfolioTransaction transaction =
+                mapper.toEntity(portfolioId, tradableAsset.getId(), request);
 
         PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
 
-        if (savedTransaction.getTransactionType() == TransactionType.BUY) {
-            if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
-                positionLotService.createLot(savedTransaction);
-            } else if (
-                    brokerageAccount.getSellMode() == SellMode.POSITION_BASED
-            ) {
-                brokeragePositionService.applyBuy(savedTransaction);
-            }
-        }
+        applyTransactionEffects(savedTransaction, brokerageAccount);
 
         return mapper.toResponse(savedTransaction);
     }
@@ -91,11 +90,7 @@ public class PortfolioTransactionService {
 
     @Transactional
     public void deleteTransaction(UUID portfolioId, UUID transactionId) {
-        PortfolioTransaction transaction =
-                findTransaction(
-                        portfolioId,
-                        transactionId
-                );
+        PortfolioTransaction transaction = findTransaction(portfolioId, transactionId);
 
         transactionRepository.delete(transaction);
     }
@@ -103,17 +98,11 @@ public class PortfolioTransactionService {
     private PortfolioTransaction findTransaction(UUID portfolioId, UUID transactionId) {
         return transactionRepository.findByIdAndPortfolioId(transactionId, portfolioId)
                 .orElseThrow(
-                        () -> new PortfolioTransactionNotFoundException(
-                                portfolioId,
-                                transactionId
-                        )
+                        () -> new PortfolioTransactionNotFoundException(portfolioId, transactionId)
                 );
     }
 
-    private BrokerageAccount findBrokerageAccount(
-            UUID portfolioId,
-            UUID brokerageAccountId
-    ) {
+    private BrokerageAccount findBrokerageAccount(UUID portfolioId, UUID brokerageAccountId) {
         return brokerageAccountRepository
                 .findByIdAndPortfolioId(brokerageAccountId, portfolioId)
                 .orElseThrow(
@@ -124,6 +113,38 @@ public class PortfolioTransactionService {
     private void validateTradableAsset(UUID tradableAssetId) {
         if (!tradableAssetRepository.existsById(tradableAssetId)) {
             throw new IllegalArgumentException("Tradable asset not found with id: " + tradableAssetId);
+        }
+    }
+
+    private void applyTransactionEffects(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
+        if (transaction.getTransactionType() == TransactionType.BUY) {
+            handleBuy(transaction, brokerageAccount);
+        }
+
+        if (transaction.getTransactionType() == TransactionType.SELL) {
+            handleSell(transaction, brokerageAccount);
+        }
+    }
+
+    private void handleBuy(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
+        if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
+            positionLotService.createLot(transaction);
+            return;
+        }
+
+        if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
+            brokeragePositionService.applyBuy(transaction);
+        }
+    }
+
+    private void handleSell(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
+        if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
+            brokeragePositionService.applySell(transaction);
+        }
+
+        if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
+            sellAllocationService.applyLotBasedSell(transaction, brokerageAccount.getLotAllocationMethod()
+            );
         }
     }
 }
