@@ -23,6 +23,7 @@ CREATE TABLE brokerage_positions (
         ON DELETE CASCADE,
 
     CONSTRAINT uk_brokerage_position
+        UNIQUE (
             portfolio_id,
             tradable_asset_id,
             brokerage_account_id
