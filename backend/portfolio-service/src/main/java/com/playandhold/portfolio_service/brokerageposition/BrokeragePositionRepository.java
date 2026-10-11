@@ -5,8 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface BrokeragePositionRepository
-        extends JpaRepository<BrokeragePosition, UUID> {
+public interface BrokeragePositionRepository extends JpaRepository<BrokeragePosition, UUID> {
 
     Optional<BrokeragePosition> findByPortfolioIdAndTradableAssetIdAndBrokerageAccountId(
             UUID portfolioId,

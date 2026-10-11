@@ -139,7 +139,7 @@ public class PortfolioTransactionService {
 
     private void handleSell(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
         if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
-            throw new UnsupportedOperationException("POSITION_BASED sell is not implemented yet");
+            brokeragePositionService.applySell(transaction);
         }
 
         if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
