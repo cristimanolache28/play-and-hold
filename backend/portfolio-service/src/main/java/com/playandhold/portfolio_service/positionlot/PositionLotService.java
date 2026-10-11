@@ -58,4 +58,38 @@ public class PositionLotService {
                         BigDecimal::add
                 );
     }
+
+    @Transactional(readOnly = true)
+    public List<PositionLot> getOpenLotsForFifo(
+            UUID portfolioId,
+            UUID tradableAssetId,
+            UUID brokerageAccountId
+    ) {
+        return positionLotRepository.findLotsOrderedByBuyExecutedAtAsc(
+                portfolioId,
+                tradableAssetId,
+                brokerageAccountId,
+                LotStatus.OPEN
+        );
+    }
+
+    @Transactional
+    public PositionLot consumeQuantity(PositionLot lot, BigDecimal quantityToConsume) {
+        if (quantityToConsume.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Quantity to consume must be greater than zero");
+        }
+
+        if (quantityToConsume.compareTo(lot.getQuantity()) > 0) {
+            throw new IllegalArgumentException("Cannot consume more than the available lot quantity");
+        }
+
+        BigDecimal remainingQuantity = lot.getQuantity().subtract(quantityToConsume);
+        lot.setQuantity(remainingQuantity);
+
+        if (remainingQuantity.compareTo(BigDecimal.ZERO) == 0) {
+            lot.setStatus(LotStatus.CLOSED);
+        }
+
+        return positionLotRepository.save(lot);
+    }
 }

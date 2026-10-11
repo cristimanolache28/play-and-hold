@@ -15,6 +15,8 @@ import com.playandhold.portfolio_service.brokerageposition.BrokeragePositionServ
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.playandhold.portfolio_service.brokerage.LotAllocationMethod;
+import com.playandhold.portfolio_service.sellallocation.SellAllocationService;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,31 +31,42 @@ public class PortfolioTransactionService {
     private final TradableAssetRepository tradableAssetRepository;
     private final PositionLotService positionLotService;
     private final BrokeragePositionService brokeragePositionService;
+    private final SellAllocationService sellAllocationService;
 
     @Transactional
-    public PortfolioTransactionResponse createTransaction(UUID portfolioId, CreatePortfolioTransactionRequest request) {
+    public PortfolioTransactionResponse createTransaction(
+            UUID portfolioId,
+            CreatePortfolioTransactionRequest request
+    ) {
         TradableAsset tradableAsset =
                 tradableAssetRepository
                         .findBySymbolIgnoreCase(request.symbol())
                         .orElseThrow(
-                                () -> new TradableAssetNotFoundException(request.symbol())
+                                () -> new TradableAssetNotFoundException(
+                                        request.symbol()
+                                )
                         );
 
-        BrokerageAccount brokerageAccount = findBrokerageAccount(portfolioId, request.brokerageAccountId());
+        BrokerageAccount brokerageAccount =
+                findBrokerageAccount(
+                        portfolioId,
+                        request.brokerageAccountId()
+                );
 
-        PortfolioTransaction transaction = mapper.toEntity(portfolioId, tradableAsset.getId(), request);
+        PortfolioTransaction transaction =
+                mapper.toEntity(
+                        portfolioId,
+                        tradableAsset.getId(),
+                        request
+                );
 
-        PortfolioTransaction savedTransaction = transactionRepository.save(transaction);
+        PortfolioTransaction savedTransaction =
+                transactionRepository.save(transaction);
 
-        if (savedTransaction.getTransactionType() == TransactionType.BUY) {
-            if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
-                positionLotService.createLot(savedTransaction);
-            } else if (
-                    brokerageAccount.getSellMode() == SellMode.POSITION_BASED
-            ) {
-                brokeragePositionService.applyBuy(savedTransaction);
-            }
-        }
+        applyTransactionEffects(
+                savedTransaction,
+                brokerageAccount
+        );
 
         return mapper.toResponse(savedTransaction);
     }
@@ -126,4 +139,57 @@ public class PortfolioTransactionService {
             throw new IllegalArgumentException("Tradable asset not found with id: " + tradableAssetId);
         }
     }
+
+    private void applyTransactionEffects(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
+        if (transaction.getTransactionType() == TransactionType.BUY) {
+            handleBuy(transaction, brokerageAccount);
+        }
+
+        if (transaction.getTransactionType() == TransactionType.SELL) {
+            handleSell(transaction, brokerageAccount);
+        }
+    }
+
+    private void handleBuy(PortfolioTransaction transaction, BrokerageAccount brokerageAccount) {
+        if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
+            positionLotService.createLot(transaction);
+            return;
+        }
+
+        if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
+            brokeragePositionService.applyBuy(transaction);
+        }
+    }
+
+    private void handleSell(
+            PortfolioTransaction transaction,
+            BrokerageAccount brokerageAccount
+    ) {
+        System.out.println("### HANDLE SELL REACHED ###");
+        System.out.println("Sell mode: " + brokerageAccount.getSellMode());
+        System.out.println("Allocation method: " + brokerageAccount.getLotAllocationMethod());
+
+        if (brokerageAccount.getSellMode() == SellMode.POSITION_BASED) {
+            throw new UnsupportedOperationException(
+                    "POSITION_BASED sell is not implemented yet"
+            );
+        }
+
+        if (brokerageAccount.getSellMode() == SellMode.LOT_BASED) {
+            if (brokerageAccount.getLotAllocationMethod()
+                    == LotAllocationMethod.FIFO) {
+
+                System.out.println("### FIFO BRANCH REACHED ###");
+
+                sellAllocationService.applyFifoSell(transaction);
+                return;
+            }
+
+            throw new UnsupportedOperationException(
+                    "LIFO sell is not implemented yet"
+            );
+        }
+    }
+
+
 }
