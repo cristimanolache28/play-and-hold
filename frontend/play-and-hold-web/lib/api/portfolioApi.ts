@@ -1,5 +1,5 @@
 import type { BrokerageAccount } from "@/types/BrokerageAccount";
-import type {CreatePortfolioTransactionRequest,PortfolioTransaction,} from "@/types/PortfolioTransaction";
+import type {CreatePortfolioTransactionRequest, PortfolioTransaction,} from "@/types/PortfolioTransaction";
 
 const API_URL = process.env.NEXT_PUBLIC_PORTFOLIO_API_URL;
 
