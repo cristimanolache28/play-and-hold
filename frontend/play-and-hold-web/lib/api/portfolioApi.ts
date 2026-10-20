@@ -1,5 +1,6 @@
 import type { BrokerageAccount } from "@/types/BrokerageAccount";
 import type {CreatePortfolioTransactionRequest, PortfolioTransaction,} from "@/types/PortfolioTransaction";
+import type { TradableAsset } from "@/types/TradableAsset";
 
 const API_URL = process.env.NEXT_PUBLIC_PORTFOLIO_API_URL;
 
@@ -37,6 +38,20 @@ export async function createPortfolioTransaction(
 
   if (!response.ok) {
     throw new Error("Failed to create transaction");
+  }
+
+  return response.json();
+}
+
+export async function searchTradableAssets(
+  query: string,
+): Promise<TradableAsset[]> {
+  const response = await fetch(
+    `${API_URL}/tradable-assets/search?query=${encodeURIComponent(query)}`,
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to search tradable assets");
   }
 
   return response.json();

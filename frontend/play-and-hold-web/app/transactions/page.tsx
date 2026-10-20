@@ -1,64 +1,48 @@
 "use client";
 
+import type { BrokerageAccount } from "@/types/BrokerageAccount";
 import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent } from "react";
+import type { TradableAsset } from "@/types/TradableAsset";
 
 import {
   createPortfolioTransaction,
   getBrokerageAccounts,
+  searchTradableAssets,
 } from "@/lib/api/portfolioApi";
 
-import type { BrokerageAccount } from "@/types/BrokerageAccount";
-
-const TEST_PORTFOLIO_ID =
-  "7aea14ad-b298-4fad-8a0f-3131dfa29db2";
+const TEST_PORTFOLIO_ID = "7aea14ad-b298-4fad-8a0f-3131dfa29db2";
 
 export default function TransactionsPage() {
-  const [brokerageAccounts, setBrokerageAccounts] =
-    useState<BrokerageAccount[]>([]);
+  const [brokerageAccounts, setBrokerageAccounts] = useState<
+    BrokerageAccount[]
+  >([]);
 
   const [loading, setLoading] = useState(true);
-
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const [
-    selectedBrokerageAccountId,
-    setSelectedBrokerageAccountId,
-  ] = useState("");
-
+  const [error, setError] = useState<string | null>(null);
+  const [selectedBrokerageAccountId, setSelectedBrokerageAccountId] =
+    useState("");
   const [symbol, setSymbol] = useState("");
+  const [assetResults, setAssetResults] = useState<TradableAsset[]>([]);
+  const [assetSearchLoading, setAssetSearchLoading] = useState(false);
+  const [assetSearchError, setAssetSearchError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
   const [executedAt, setExecutedAt] = useState("");
-
-  const [submitting, setSubmitting] =
-    useState(false);
-
-  const [submitError, setSubmitError] =
-    useState<string | null>(null);
-
-  const [successMessage, setSuccessMessage] =
-    useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadBrokerageAccounts() {
       try {
-        const accounts =
-          await getBrokerageAccounts(
-            TEST_PORTFOLIO_ID,
-          );
+        const accounts = await getBrokerageAccounts(TEST_PORTFOLIO_ID);
 
         setBrokerageAccounts(accounts);
       } catch (error) {
-        console.error(
-          "Failed to load brokerage accounts:",
-          error,
-        );
+        console.error("Failed to load brokerage accounts:", error);
 
-        setError(
-          "Could not load brokerage accounts",
-        );
+        setError("Could not load brokerage accounts");
       } finally {
         setLoading(false);
       }
@@ -67,9 +51,7 @@ export default function TransactionsPage() {
     loadBrokerageAccounts();
   }, []);
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setSubmitting(true);
@@ -77,27 +59,19 @@ export default function TransactionsPage() {
     setSuccessMessage(null);
 
     try {
-      await createPortfolioTransaction(
-        TEST_PORTFOLIO_ID,
-        {
-          symbol: symbol.trim().toUpperCase(),
-          brokerageAccountId:
-            selectedBrokerageAccountId,
-          transactionType: "BUY",
-          quantity: Number(quantity),
-          price: Number(price),
-          fees: 0,
-          executedAt: executedAt
-            ? new Date(executedAt).toISOString()
-            : null,
-          notes: null,
-        },
-      );
+      await createPortfolioTransaction(TEST_PORTFOLIO_ID, {
+        symbol: symbol.trim().toUpperCase(),
+        brokerageAccountId: selectedBrokerageAccountId,
+        transactionType: "BUY",
+        quantity: Number(quantity),
+        price: Number(price),
+        fees: 0,
+        executedAt: executedAt ? new Date(executedAt).toISOString() : null,
+        notes: null,
+      });
 
       setSuccessMessage(
-        `${symbol
-          .trim()
-          .toUpperCase()} transaction created successfully.`,
+        `${symbol.trim().toUpperCase()} transaction created successfully.`,
       );
 
       setSymbol("");
@@ -105,27 +79,51 @@ export default function TransactionsPage() {
       setPrice("");
       setExecutedAt("");
     } catch (error) {
-      console.error(
-        "Failed to create transaction:",
-        error,
-      );
+      console.error("Failed to create transaction:", error);
 
-      setSubmitError(
-        "Could not create transaction.",
-      );
+      setSubmitError("Could not create transaction.");
     } finally {
       setSubmitting(false);
     }
   }
+  useEffect(() => {
+    const normalizedQuery = symbol.trim();
 
-  const activeAccounts =
-    brokerageAccounts.filter(
-      (account) => account.active,
-    ).length;
+    if (normalizedQuery.length < 2) {
+      setAssetResults([]);
+      setAssetSearchError(null);
+      return;
+    }
 
-  const transactionValue =
-    Number(quantity || 0) *
-    Number(price || 0);
+    const timeoutId = setTimeout(async () => {
+      setAssetSearchLoading(true);
+      setAssetSearchError(null);
+
+      try {
+        const results = await searchTradableAssets(normalizedQuery);
+
+        setAssetResults(results);
+      } catch (error) {
+        console.error("Failed to search tradable assets:", error);
+
+        setAssetSearchError("Could not search assets.");
+
+        setAssetResults([]);
+      } finally {
+        setAssetSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [symbol]);
+
+  const activeAccounts = brokerageAccounts.filter(
+    (account) => account.active,
+  ).length;
+
+  const transactionValue = Number(quantity || 0) * Number(price || 0);
 
   return (
     <main className="min-h-screen bg-[#05070b] px-6 py-8 text-white lg:px-10">
@@ -147,17 +145,14 @@ export default function TransactionsPage() {
                 </h1>
 
                 <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-400">
-                  Add investments, manage brokerage
-                  activity and keep your portfolio
-                  history centralized.
+                  Add investments, manage brokerage activity and keep your
+                  portfolio history centralized.
                 </p>
               </div>
 
               <div className="flex gap-3">
                 <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 backdrop-blur">
-                  <p className="text-xs text-zinc-500">
-                    Accounts
-                  </p>
+                  <p className="text-xs text-zinc-500">Accounts</p>
 
                   <p className="mt-1 text-xl font-semibold">
                     {brokerageAccounts.length}
@@ -165,9 +160,7 @@ export default function TransactionsPage() {
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/20 px-5 py-3 backdrop-blur">
-                  <p className="text-xs text-zinc-500">
-                    Active
-                  </p>
+                  <p className="text-xs text-zinc-500">Active</p>
 
                   <p className="mt-1 text-xl font-semibold text-emerald-400">
                     {activeAccounts}
@@ -215,10 +208,7 @@ export default function TransactionsPage() {
               </div>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="p-6 lg:p-8"
-            >
+            <form onSubmit={handleSubmit} className="p-6 lg:p-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* ASSET */}
                 <div>
@@ -230,11 +220,7 @@ export default function TransactionsPage() {
                     <input
                       type="text"
                       value={symbol}
-                      onChange={(event) =>
-                        setSymbol(
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => setSymbol(event.target.value)}
                       placeholder="Search ticker..."
                       required
                       className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-base font-medium uppercase text-white outline-none transition placeholder:normal-case placeholder:text-zinc-600 focus:border-violet-400/60 focus:bg-white/[0.05]"
@@ -242,8 +228,7 @@ export default function TransactionsPage() {
                   </div>
 
                   <p className="mt-2 text-xs text-zinc-600">
-                    Asset search will replace the
-                    current ticker input.
+                    Asset search will replace the current ticker input.
                   </p>
                 </div>
 
@@ -254,32 +239,20 @@ export default function TransactionsPage() {
                   </label>
 
                   <select
-                    value={
-                      selectedBrokerageAccountId
-                    }
+                    value={selectedBrokerageAccountId}
                     onChange={(event) =>
-                      setSelectedBrokerageAccountId(
-                        event.target.value,
-                      )
+                      setSelectedBrokerageAccountId(event.target.value)
                     }
                     required
                     className="h-14 w-full rounded-2xl border border-white/10 bg-[#0d1118] px-4 text-sm text-white outline-none transition focus:border-violet-400/60"
                   >
-                    <option value="">
-                      Select brokerage account
-                    </option>
+                    <option value="">Select brokerage account</option>
 
-                    {brokerageAccounts.map(
-                      (account) => (
-                        <option
-                          key={account.id}
-                          value={account.id}
-                        >
-                          {account.brokerName} —{" "}
-                          {account.accountName}
-                        </option>
-                      ),
-                    )}
+                    {brokerageAccounts.map((account) => (
+                      <option key={account.id} value={account.id}>
+                        {account.brokerName} — {account.accountName}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -294,11 +267,7 @@ export default function TransactionsPage() {
                     step="any"
                     min="0"
                     value={quantity}
-                    onChange={(event) =>
-                      setQuantity(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setQuantity(event.target.value)}
                     placeholder="0"
                     required
                     className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-lg font-medium text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-400/60 focus:bg-white/[0.05]"
@@ -321,11 +290,7 @@ export default function TransactionsPage() {
                       step="0.01"
                       min="0"
                       value={price}
-                      onChange={(event) =>
-                        setPrice(
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => setPrice(event.target.value)}
                       placeholder="0.00"
                       required
                       className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.03] pl-8 pr-4 text-lg font-medium text-white outline-none transition placeholder:text-zinc-700 focus:border-cyan-400/60 focus:bg-white/[0.05]"
@@ -342,17 +307,12 @@ export default function TransactionsPage() {
                   <input
                     type="datetime-local"
                     value={executedAt}
-                    onChange={(event) =>
-                      setExecutedAt(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setExecutedAt(event.target.value)}
                     className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm text-zinc-300 outline-none transition focus:border-violet-400/60 md:w-1/2"
                   />
 
                   <p className="mt-2 text-xs text-zinc-600">
-                    Optional. Leave empty to use the
-                    current execution time.
+                    Optional. Leave empty to use the current execution time.
                   </p>
                 </div>
               </div>
@@ -367,20 +327,15 @@ export default function TransactionsPage() {
 
                     <p className="mt-2 text-2xl font-semibold tracking-tight">
                       $
-                      {transactionValue.toLocaleString(
-                        "en-US",
-                        {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        },
-                      )}
+                      {transactionValue.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </p>
                   </div>
 
                   <div className="text-left sm:text-right">
-                    <p className="text-xs text-zinc-500">
-                      Order type
-                    </p>
+                    <p className="text-xs text-zinc-500">Order type</p>
 
                     <div className="mt-1 inline-flex items-center gap-2 text-sm font-semibold text-emerald-400">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
@@ -451,76 +406,56 @@ export default function TransactionsPage() {
             <div className="mt-6 space-y-3">
               {!loading &&
                 !error &&
-                brokerageAccounts.map(
-                  (account) => {
-                    const isSelected =
-                      account.id ===
-                      selectedBrokerageAccountId;
+                brokerageAccounts.map((account) => {
+                  const isSelected = account.id === selectedBrokerageAccountId;
 
-                    return (
-                      <button
-                        type="button"
-                        key={account.id}
-                        onClick={() =>
-                          setSelectedBrokerageAccountId(
-                            account.id,
-                          )
-                        }
-                        className={`w-full rounded-2xl border p-4 text-left transition ${
-                          isSelected
-                            ? "border-violet-400/50 bg-violet-500/10"
-                            : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-medium text-white">
-                              {
-                                account.brokerName
-                              }
-                            </p>
+                  return (
+                    <button
+                      type="button"
+                      key={account.id}
+                      onClick={() => setSelectedBrokerageAccountId(account.id)}
+                      className={`w-full rounded-2xl border p-4 text-left transition ${
+                        isSelected
+                          ? "border-violet-400/50 bg-violet-500/10"
+                          : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-white">
+                            {account.brokerName}
+                          </p>
 
-                            <p className="mt-1 text-xs text-zinc-500">
-                              {
-                                account.accountName
-                              }
-                            </p>
-                          </div>
-
-                          <span
-                            className={`mt-1 h-2 w-2 rounded-full ${
-                              account.active
-                                ? "bg-emerald-400"
-                                : "bg-zinc-700"
-                            }`}
-                          />
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {account.accountName}
+                          </p>
                         </div>
 
-                        <div className="mt-4 flex items-center gap-2">
-                          <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
-                            {
-                              account.currency
-                            }
-                          </span>
+                        <span
+                          className={`mt-1 h-2 w-2 rounded-full ${
+                            account.active ? "bg-emerald-400" : "bg-zinc-700"
+                          }`}
+                        />
+                      </div>
 
-                          <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
-                            {
-                              account.sellMode
-                            }
-                          </span>
+                      <div className="mt-4 flex items-center gap-2">
+                        <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
+                          {account.currency}
+                        </span>
 
-                          {account.lotAllocationMethod && (
-                            <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
-                              {
-                                account.lotAllocationMethod
-                              }
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    );
-                  },
-                )}
+                        <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
+                          {account.sellMode}
+                        </span>
+
+                        {account.lotAllocationMethod && (
+                          <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] text-zinc-400">
+                            {account.lotAllocationMethod}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </aside>
         </div>
@@ -550,8 +485,8 @@ export default function TransactionsPage() {
               </p>
 
               <p className="mt-2 text-sm text-zinc-600">
-                Search, filters and complete transaction
-                history will be added next.
+                Search, filters and complete transaction history will be added
+                next.
               </p>
             </div>
           </div>

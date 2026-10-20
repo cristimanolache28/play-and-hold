@@ -6,10 +6,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/tradable-assets")
@@ -25,6 +24,11 @@ public class TradableAssetController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(assetResponse);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<TradableAssetResponse>> searchTradableAssets(@RequestParam String query) {
+        return ResponseEntity.ok(service.searchTradableAssets(query));
     }
 
 }
